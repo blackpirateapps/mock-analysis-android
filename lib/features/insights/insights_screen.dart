@@ -32,7 +32,7 @@ class InsightsScreen extends ConsumerWidget {
                 child: Text(
                   'No mock data yet.\nAdd your first test in Log.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF8E8E93)),
+                  style: TextStyle(color: Color(0xFFB8B8BE), fontSize: 16),
                 ),
               );
             }
@@ -120,7 +120,7 @@ class InsightsScreen extends ConsumerWidget {
                                 Text(
                                   percentText(item.averageAccuracy),
                                   style: const TextStyle(
-                                    color: Color(0xFFFF3B30),
+                                    color: Color(0xFFFF453A),
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -136,7 +136,10 @@ class InsightsScreen extends ConsumerWidget {
               error: (Object error, StackTrace stackTrace) => Center(
                 child: Text(
                   error.toString(),
-                  style: const TextStyle(color: Color(0xFFFF3B30)),
+                  style: const TextStyle(
+                    color: Color(0xFFFF453A),
+                    fontSize: 14,
+                  ),
                 ),
               ),
             );
@@ -145,7 +148,7 @@ class InsightsScreen extends ConsumerWidget {
           error: (Object error, StackTrace stackTrace) => Center(
             child: Text(
               error.toString(),
-              style: const TextStyle(color: Color(0xFFFF3B30)),
+              style: const TextStyle(color: Color(0xFFFF453A), fontSize: 14),
             ),
           ),
         ),

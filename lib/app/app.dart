@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../features/home/home_screen.dart';
 import '../features/insights/insights_screen.dart';
 import '../features/log/log_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -34,6 +35,10 @@ class RootTabScaffold extends StatelessWidget {
         inactiveColor: const Color(0xFF8E8E93),
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.add_circled),
             label: 'Log',
           ),
@@ -50,8 +55,10 @@ class RootTabScaffold extends StatelessWidget {
       tabBuilder: (BuildContext context, int index) {
         switch (index) {
           case 0:
-            return const LogScreen();
+            return const HomeScreen();
           case 1:
+            return const LogScreen();
+          case 2:
             return const InsightsScreen();
           default:
             return const SettingsScreen();

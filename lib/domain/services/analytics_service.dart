@@ -47,6 +47,16 @@ class WeakSubjectStat {
 class AnalyticsService {
   const AnalyticsService();
 
+  double percentileFromRank({required int rank, required int totalCandidates}) {
+    if (rank <= 0 || totalCandidates <= 0) {
+      return 0;
+    }
+    final int safeRank = rank > totalCandidates ? totalCandidates : rank;
+    final double percentile =
+        ((totalCandidates - safeRank + 1) / totalCandidates) * 100;
+    return percentile.clamp(0, 100).toDouble();
+  }
+
   SubjectComputed computeSubject(SubjectEntry subject, MarkingScheme scheme) {
     final int correct = subject.correct;
     final int attempted = subject.attempted;

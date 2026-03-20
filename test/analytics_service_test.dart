@@ -96,4 +96,19 @@ void main() {
     final List<WeakSubjectStat> weak = service.weakSubjects(tests);
     expect(weak.first.subjectName, 'Math');
   });
+
+  test('derives percentile from rank and total candidates', () {
+    expect(
+      service.percentileFromRank(rank: 1, totalCandidates: 1000),
+      closeTo(100, 0.0001),
+    );
+    expect(
+      service.percentileFromRank(rank: 500, totalCandidates: 1000),
+      closeTo(50.1, 0.0001),
+    );
+    expect(
+      service.percentileFromRank(rank: 1000, totalCandidates: 1000),
+      closeTo(0.1, 0.0001),
+    );
+  });
 }

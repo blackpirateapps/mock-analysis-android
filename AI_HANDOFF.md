@@ -129,6 +129,12 @@ Pipeline steps:
 - Stabilized widget test by wrapping app with `ProviderScope` and overriding async providers (`markingSchemeProvider`, `testsProvider`) to avoid DB/plugin initialization in test environment.
 - Made widget test less brittle by asserting no runtime exception and presence of `MockAnalysisApp` widget instead of relying on specific tab label text rendering timing.
 
+## Product Direction Update (User-Driven)
+- Added a dedicated `Home` quick-view tab that summarizes subject-folder analytics at a glance.
+- Updated logging flow semantics: subject behaves like a folder. User now logs a mock with these primary inputs: mock name, subject folder, correct, wrong, skipped, rank, and total candidates.
+- Percentile is no longer entered manually in log flow; it is derived from rank and total candidates via `AnalyticsService.percentileFromRank`.
+- Improved readability in key UI texts by using brighter neutral text colors in insights/home status and error states.
+
 ## Verification Commands (CI/local when Flutter is available)
 - `flutter pub get`
 - `dart run build_runner build --delete-conflicting-outputs`

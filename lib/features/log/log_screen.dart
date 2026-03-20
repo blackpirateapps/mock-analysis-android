@@ -14,103 +14,81 @@ class LogScreen extends ConsumerStatefulWidget {
   ConsumerState<LogScreen> createState() => _LogScreenState();
 }
 
-class _DraftSubject {
-  _DraftSubject({required this.id});
-
-  final String id;
-  String name = '';
-  int attempted = 0;
-  int wrong = 0;
-  int skipped = 0;
-  late final TextEditingController nameController = TextEditingController(
-    text: name,
-  );
-  late final TextEditingController attemptedController = TextEditingController(
-    text: attempted.toString(),
-  );
-  late final TextEditingController wrongController = TextEditingController(
-    text: wrong.toString(),
-  );
-  late final TextEditingController skippedController = TextEditingController(
-    text: skipped.toString(),
-  );
-
-  void dispose() {
-    nameController.dispose();
-    attemptedController.dispose();
-    wrongController.dispose();
-    skippedController.dispose();
-  }
-
-  SubjectEntry toSubjectEntry() => SubjectEntry(
-    subjectId: id,
-    name: name.trim(),
-    attempted: attempted,
-    wrong: wrong,
-    skipped: skipped,
-  );
-}
-
 class _LogScreenState extends ConsumerState<LogScreen> {
-  final TextEditingController _testNameController = TextEditingController();
-  final TextEditingController _percentileController = TextEditingController();
+  final Uuid _uuid = const Uuid();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _folderController = TextEditingController();
+  final TextEditingController _correctController = TextEditingController();
+  final TextEditingController _wrongController = TextEditingController();
+  final TextEditingController _skippedController = TextEditingController();
   final TextEditingController _rankController = TextEditingController();
   final TextEditingController _totalCandidatesController =
       TextEditingController();
-  final Uuid _uuid = const Uuid();
+
   DateTime _timestamp = DateTime.now();
+  String _selectedFolder = '';
   String? _error;
   bool _isSaving = false;
-  final List<_DraftSubject> _subjects = <_DraftSubject>[];
-
-  @override
-  void initState() {
-    super.initState();
-    _subjects.add(_DraftSubject(id: _uuid.v4()));
-  }
 
   @override
   void dispose() {
-    for (final _DraftSubject subject in _subjects) {
-      subject.dispose();
-    }
-    _testNameController.dispose();
-    _percentileController.dispose();
+    _nameController.dispose();
+    _folderController.dispose();
+    _correctController.dispose();
+    _wrongController.dispose();
+    _skippedController.dispose();
     _rankController.dispose();
     _totalCandidatesController.dispose();
     super.dispose();
   }
 
   TestEntry? _buildDraft() {
-    final String testName = _testNameController.text.trim();
-    final double? percentile = double.tryParse(
-      _percentileController.text.trim(),
-    );
+    final AnalyticsService analytics = ref.read(analyticsServiceProvider);
+    final String testName = _nameController.text.trim();
+    final String folder = _folderController.text.trim().isNotEmpty
+        ? _folderController.text.trim()
+        : _selectedFolder;
+    final int? correct = int.tryParse(_correctController.text.trim());
+    final int? wrong = int.tryParse(_wrongController.text.trim());
+    final int? skipped = int.tryParse(_skippedController.text.trim());
     final int? rank = int.tryParse(_rankController.text.trim());
     final int? totalCandidates = int.tryParse(
       _totalCandidatesController.text.trim(),
     );
+
     if (testName.isEmpty ||
-        percentile == null ||
+        folder.isEmpty ||
+        correct == null ||
+        wrong == null ||
+        skipped == null ||
         rank == null ||
-        totalCandidates == null) {
+        totalCandidates == null ||
+        correct < 0 ||
+        wrong < 0 ||
+        skipped < 0 ||
+        rank <= 0 ||
+        totalCandidates <= 0) {
       return null;
     }
-    final List<SubjectEntry> parsed = _subjects
-        .where((subj) => subj.name.trim().isNotEmpty)
-        .map((subj) => subj.toSubjectEntry())
-        .toList();
-    if (parsed.isEmpty) {
+
+    final int attempted = correct + wrong;
+    if (wrong > attempted) {
       return null;
     }
-    for (final SubjectEntry subject in parsed) {
-      if (subject.wrong > subject.attempted ||
-          subject.attempted < 0 ||
-          subject.wrong < 0 ||
-          subject.skipped < 0) {
-        return null;
-      }
-    }
+
+    final double percentile = analytics.percentileFromRank(
+      rank: rank,
+      totalCandidates: totalCandidates,
+    );
+
+    final SubjectEntry subject = SubjectEntry(
+      subjectId: _uuid.v4(),
+      name: folder,
+      attempted: attempted,
+      wrong: wrong,
+      skipped: skipped,
+    );
+
     return TestEntry(
       id: _uuid.v4(),
       timestamp: _timestamp,
@@ -118,24 +96,20 @@ class _LogScreenState extends ConsumerState<LogScreen> {
       percentile: percentile,
       rank: rank,
       totalCandidates: totalCandidates,
-      subjects: parsed,
+      subjects: <SubjectEntry>[subject],
     );
   }
 
   Future<void> _save() async {
-    setState(() {
-      _error = null;
-    });
     final TestEntry? draft = _buildDraft();
     if (draft == null) {
-      setState(() {
-        _error = 'Please fill valid test and subject data.';
-      });
+      setState(() => _error = 'Fill all fields with valid values.');
       return;
     }
 
     setState(() {
       _isSaving = true;
+      _error = null;
     });
     try {
       await ref.read(testRepositoryProvider).saveTest(draft);
@@ -144,44 +118,23 @@ class _LogScreenState extends ConsumerState<LogScreen> {
         return;
       }
       setState(() {
-        _testNameController.clear();
-        _percentileController.clear();
+        _nameController.clear();
+        _correctController.clear();
+        _wrongController.clear();
+        _skippedController.clear();
         _rankController.clear();
         _totalCandidatesController.clear();
-        for (final _DraftSubject subject in _subjects) {
-          subject.dispose();
-        }
-        _subjects
-          ..clear()
-          ..add(_DraftSubject(id: _uuid.v4()));
-        _timestamp = DateTime.now();
       });
-      showCupertinoDialog<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return CupertinoAlertDialog(
-            title: const Text('Saved'),
-            content: const Text('Mock entry stored locally.'),
-            actions: <Widget>[
-              CupertinoDialogAction(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
     } finally {
       if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
+        setState(() => _isSaving = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final AsyncValue<List<TestEntry>> testsAsync = ref.watch(testsProvider);
     final AsyncValue<MarkingScheme> schemeAsync = ref.watch(
       markingSchemeProvider,
     );
@@ -194,91 +147,66 @@ class _LogScreenState extends ConsumerState<LogScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            _Section(
-              title: 'Timestamp',
-              child: CupertinoButton(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 14,
-                ),
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(16),
-                onPressed: () async {
-                  await showCupertinoModalPopup<void>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      DateTime temp = _timestamp;
-                      return Container(
-                        color: const Color(0xFF1C1C1E),
-                        height: 280,
-                        child: Column(
-                          children: <Widget>[
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: CupertinoButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _timestamp = temp;
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Done'),
-                              ),
-                            ),
-                            Expanded(
-                              child: CupertinoDatePicker(
-                                mode: CupertinoDatePickerMode.dateAndTime,
-                                initialDateTime: _timestamp,
-                                onDateTimeChanged: (DateTime value) {
-                                  temp = value;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: Text(_timestamp.toLocal().toString()),
-              ),
-            ),
-            _Section(
-              title: 'Test Metadata',
-              child: Column(
+            _section(
+              'Entry',
+              Column(
                 children: <Widget>[
-                  _field(_testNameController, 'Test Name'),
+                  _field(_nameController, 'Mock name'),
                   const SizedBox(height: 10),
-                  _field(_percentileController, 'Percentile', isNumber: true),
+                  testsAsync.when(
+                    data: (List<TestEntry> tests) {
+                      final List<String> folders =
+                          tests
+                              .expand((TestEntry t) => t.subjects)
+                              .map((SubjectEntry s) => s.name)
+                              .toSet()
+                              .toList()
+                            ..sort();
+                      return _folderPicker(folders);
+                    },
+                    loading: () => const CupertinoActivityIndicator(),
+                    error: (Object _, StackTrace __) =>
+                        _folderPicker(const <String>[]),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: _field(
+                          _correctController,
+                          'Correct',
+                          isNumber: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _field(
+                          _wrongController,
+                          'Wrong',
+                          isNumber: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _field(
+                          _skippedController,
+                          'Skipped',
+                          isNumber: true,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   _field(_rankController, 'Rank', isNumber: true),
                   const SizedBox(height: 10),
                   _field(
                     _totalCandidatesController,
-                    'Total Candidates',
+                    'Total candidates',
                     isNumber: true,
                   ),
                 ],
               ),
             ),
-            _Section(
-              title: 'Subjects',
-              child: Column(
-                children: <Widget>[
-                  for (int i = 0; i < _subjects.length; i++) _subjectCard(i),
-                  const SizedBox(height: 8),
-                  CupertinoButton(
-                    color: const Color(0xFF0A84FF),
-                    borderRadius: BorderRadius.circular(999),
-                    onPressed: () => setState(
-                      () => _subjects.add(_DraftSubject(id: _uuid.v4())),
-                    ),
-                    child: const Text('Add Subject'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
             if (draft != null)
               schemeAsync.when(
                 data: (MarkingScheme scheme) {
@@ -286,28 +214,26 @@ class _LogScreenState extends ConsumerState<LogScreen> {
                     draft,
                     scheme,
                   );
-                  return _Section(
-                    title: 'Preview',
-                    child: Text(
-                      'Score ${fixedScore(computed.score)}  Accuracy ${percentText(computed.accuracy)}',
+                  return _section(
+                    'Quick Preview',
+                    Text(
+                      'Percentile ${draft.percentile.toStringAsFixed(2)} | Score ${fixedScore(computed.score)} | Accuracy ${percentText(computed.accuracy)}',
                       style: const TextStyle(
                         color: Color(0xFFFFFFFF),
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   );
                 },
-                loading: () =>
-                    const Center(child: CupertinoActivityIndicator()),
-                error: (Object error, StackTrace stackTrace) =>
-                    const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (Object _, StackTrace __) => const SizedBox.shrink(),
               ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: Color(0xFFFF3B30)),
+                  style: const TextStyle(color: Color(0xFFFF453A)),
                 ),
               ),
             CupertinoButton.filled(
@@ -315,85 +241,66 @@ class _LogScreenState extends ConsumerState<LogScreen> {
               onPressed: _isSaving ? null : _save,
               child: _isSaving
                   ? const CupertinoActivityIndicator()
-                  : const Text('Save Mock'),
+                  : const Text('Save Mock Data'),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _subjectCard(int index) {
-    final _DraftSubject subject = _subjects[index];
+  Widget _folderPicker(List<String> folders) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF2C2C2E),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: <Widget>[
-          _field(
-            subject.nameController,
-            'Subject Name',
-            onChanged: (String value) {
-              subject.name = value;
-            },
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _field(
-                  subject.attemptedController,
-                  'Attempted',
-                  isNumber: true,
-                  onChanged: (String value) {
-                    subject.attempted = int.tryParse(value.trim()) ?? 0;
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _field(
-                  subject.wrongController,
-                  'Wrong',
-                  isNumber: true,
-                  onChanged: (String value) {
-                    subject.wrong = int.tryParse(value.trim()) ?? 0;
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _field(
-                  subject.skippedController,
-                  'Skipped',
-                  isNumber: true,
-                  onChanged: (String value) {
-                    subject.skipped = int.tryParse(value.trim()) ?? 0;
-                  },
-                ),
-              ),
-            ],
-          ),
-          if (_subjects.length > 1)
-            Align(
-              alignment: Alignment.centerRight,
-              child: CupertinoButton(
-                padding: const EdgeInsets.all(0),
-                onPressed: () => setState(() {
-                  final _DraftSubject removed = _subjects.removeAt(index);
-                  removed.dispose();
-                }),
-                child: const Text(
-                  'Remove',
-                  style: TextStyle(color: Color(0xFFFF3B30)),
-                ),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            onPressed: folders.isEmpty
+                ? null
+                : () => showCupertinoModalPopup<void>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Container(
+                        height: 260,
+                        color: const Color(0xFF1C1C1E),
+                        child: CupertinoPicker(
+                          itemExtent: 34,
+                          onSelectedItemChanged: (int index) {
+                            setState(() => _selectedFolder = folders[index]);
+                          },
+                          children: folders
+                              .map(
+                                (String name) => Center(
+                                  child: Text(
+                                    name,
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFFFFF),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      );
+                    },
+                  ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _selectedFolder.isEmpty
+                    ? 'Pick existing subject folder'
+                    : _selectedFolder,
+                style: const TextStyle(color: Color(0xFFFFFFFF)),
               ),
             ),
+          ),
+          const SizedBox(height: 8),
+          _field(_folderController, 'Or create new subject folder'),
         ],
       ),
     );
@@ -403,50 +310,38 @@ class _LogScreenState extends ConsumerState<LogScreen> {
     TextEditingController controller,
     String placeholder, {
     bool isNumber = false,
-    void Function(String value)? onChanged,
   }) {
     return CupertinoTextField(
       controller: controller,
       keyboardType: isNumber
-          ? const TextInputType.numberWithOptions(decimal: true, signed: false)
+          ? const TextInputType.numberWithOptions(decimal: false, signed: false)
           : TextInputType.text,
-      placeholder: placeholder,
-      onChanged: (String value) => setState(() => onChanged?.call(value)),
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2E),
         borderRadius: BorderRadius.circular(14),
       ),
+      style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 15),
+      placeholderStyle: const TextStyle(color: Color(0xFFB8B8BE), fontSize: 15),
+      placeholder: placeholder,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      style: const TextStyle(color: Color(0xFFFFFFFF)),
-      placeholderStyle: const TextStyle(color: Color(0xFF8E8E93)),
     );
   }
-}
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _section(String title, Widget child) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFFFFFFFF),
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFFFFFFF),
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(height: 8),
           child,
         ],
       ),
