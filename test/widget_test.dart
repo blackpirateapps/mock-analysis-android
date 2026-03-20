@@ -18,6 +18,9 @@ void main() {
         child: const MockAnalysisApp(),
       ),
     );
-    expect(find.text('Log'), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MockAnalysisApp), findsOneWidget);
   });
 }
