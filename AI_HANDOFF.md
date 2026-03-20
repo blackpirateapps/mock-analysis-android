@@ -125,6 +125,7 @@ Pipeline steps:
 - Addressed lint warnings in log/settings modules (unused import and unnecessary constructor params/imports).
 - Replaced default widget test usage of `MyApp` with `MockAnalysisApp`.
 - Removed now-unused `cross_file` dependency from `pubspec.yaml`.
+- Applied additional const-optimizations in `lib/app/app.dart` for `CupertinoTabBar` colors and tab item list to satisfy strict analyze settings.
 
 ## Verification Commands (CI/local when Flutter is available)
 - `flutter pub get`

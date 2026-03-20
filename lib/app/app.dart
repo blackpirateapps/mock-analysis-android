@@ -29,10 +29,10 @@ class RootTabScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoTabScaffold(
       tabBar: CupertinoTabBar(
-        backgroundColor: Color(0xFF000000),
-        activeColor: Color(0xFFFFFFFF),
-        inactiveColor: Color(0xFF8E8E93),
-        items: <BottomNavigationBarItem>[
+        backgroundColor: const Color(0xFF000000),
+        activeColor: const Color(0xFFFFFFFF),
+        inactiveColor: const Color(0xFF8E8E93),
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.add_circled),
             label: 'Log',
