@@ -126,6 +126,7 @@ Pipeline steps:
 - Replaced default widget test usage of `MyApp` with `MockAnalysisApp`.
 - Removed now-unused `cross_file` dependency from `pubspec.yaml`.
 - Applied additional const-optimizations in `lib/app/app.dart` for `CupertinoTabBar` colors and tab item list to satisfy strict analyze settings.
+- Stabilized widget test by wrapping app with `ProviderScope` and overriding async providers (`markingSchemeProvider`, `testsProvider`) to avoid DB/plugin initialization in test environment.
 
 ## Verification Commands (CI/local when Flutter is available)
 - `flutter pub get`
