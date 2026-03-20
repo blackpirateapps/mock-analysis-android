@@ -119,6 +119,13 @@ Pipeline steps:
 6. Add repository tests for import merge/overwrite edge cases.
 7. Add README instructions for downloading APK artifact from GitHub Actions.
 
+## Latest Fixes (Post-CI Analyzer Run)
+- Resolved `const_eval_property_access` in tab scaffold by removing `const` from `CupertinoTabBar` construction.
+- Fixed undefined `CircularProgressIndicator` in insights by importing required Material symbols.
+- Addressed lint warnings in log/settings modules (unused import and unnecessary constructor params/imports).
+- Replaced default widget test usage of `MyApp` with `MockAnalysisApp`.
+- Removed now-unused `cross_file` dependency from `pubspec.yaml`.
+
 ## Verification Commands (CI/local when Flutter is available)
 - `flutter pub get`
 - `dart run build_runner build --delete-conflicting-outputs`

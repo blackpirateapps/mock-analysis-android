@@ -28,7 +28,7 @@ class RootTabScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoTabScaffold(
-      tabBar: const CupertinoTabBar(
+      tabBar: CupertinoTabBar(
         backgroundColor: Color(0xFF000000),
         activeColor: Color(0xFFFFFFFF),
         inactiveColor: Color(0xFF8E8E93),

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart'
+    show AlwaysStoppedAnimation, CircularProgressIndicator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
@@ -401,7 +403,7 @@ class InsightsScreen extends ConsumerWidget {
           maxY: 100,
           titlesData: const FlTitlesData(show: false),
           borderData: FlBorderData(show: false),
-          gridData: FlGridData(
+          gridData: const FlGridData(
             show: true,
             drawVerticalLine: false,
             horizontalInterval: 20,

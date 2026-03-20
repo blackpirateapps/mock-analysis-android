@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../core/formatters.dart';
-import '../../data/repositories/test_repository.dart';
 import '../../domain/entities/models.dart';
 import '../../domain/services/analytics_service.dart';
 
@@ -16,19 +15,13 @@ class LogScreen extends ConsumerStatefulWidget {
 }
 
 class _DraftSubject {
-  _DraftSubject({
-    required this.id,
-    this.name = '',
-    this.attempted = 0,
-    this.wrong = 0,
-    this.skipped = 0,
-  });
+  _DraftSubject({required this.id});
 
   final String id;
-  String name;
-  int attempted;
-  int wrong;
-  int skipped;
+  String name = '';
+  int attempted = 0;
+  int wrong = 0;
+  int skipped = 0;
   late final TextEditingController nameController = TextEditingController(
     text: name,
   );
