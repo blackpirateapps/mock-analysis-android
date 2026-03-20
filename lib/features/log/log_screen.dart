@@ -25,7 +25,7 @@ class _LogScreenState extends ConsumerState<LogScreen> {
   final TextEditingController _totalCandidatesController =
       TextEditingController();
 
-  DateTime _timestamp = DateTime.now();
+  final DateTime _timestamp = DateTime.now();
   String _selectedFolder = '';
   String? _error;
   bool _isSaving = false;

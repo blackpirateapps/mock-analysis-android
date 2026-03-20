@@ -134,6 +134,7 @@ Pipeline steps:
 - Updated logging flow semantics: subject behaves like a folder. User now logs a mock with these primary inputs: mock name, subject folder, correct, wrong, skipped, rank, and total candidates.
 - Percentile is no longer entered manually in log flow; it is derived from rank and total candidates via `AnalyticsService.percentileFromRank`.
 - Improved readability in key UI texts by using brighter neutral text colors in insights/home status and error states.
+- Analyzer follow-up: made `_timestamp` final in `lib/features/log/log_screen.dart` to satisfy `prefer_final_fields` lint.
 
 ## Verification Commands (CI/local when Flutter is available)
 - `flutter pub get`
