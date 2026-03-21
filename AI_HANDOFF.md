@@ -51,6 +51,14 @@ app/src/main/java/com/mockanalysis/
 │   ├── AppModule.kt             # Coroutine dispatchers
 │   └── RepositoryModule.kt      # Repository bindings
 ├── data/
+│   ├── local/                   # Room database (SQLite)
+│   │   ├── MockAnalysisDatabase.kt
+│   │   ├── dao/
+│   │   │   ├── AnalysisDao.kt
+│   │   │   └── UserDao.kt
+│   │   └── entity/
+│   │       ├── MockAttemptEntity.kt
+│   │       └── UserProfileEntity.kt
 │   ├── repository/              # Repository implementations
 │   │   ├── AnalysisRepositoryImpl.kt
 │   │   └── UserRepositoryImpl.kt
@@ -85,6 +93,14 @@ app/src/main/java/com/mockanalysis/
 │   │   ├── AnalysisHubScreen.kt
 │   │   ├── AnalysisHubViewModel.kt
 │   │   └── AnalysisHubUiState.kt
+│   ├── dashboard/               # Dashboard screen (v3)
+│   │   ├── DashboardScreen.kt
+│   │   ├── DashboardViewModel.kt
+│   │   └── DashboardUiState.kt
+│   ├── input/                   # Manual score entry screen
+│   │   ├── ManualScoreEntryScreen.kt
+│   │   ├── ManualScoreEntryViewModel.kt
+│   │   └── ManualScoreEntryUiState.kt
 │   └── profile/                 # User Profile screen
 │       ├── ProfileScreen.kt
 │       ├── ProfileViewModel.kt
@@ -110,7 +126,37 @@ The main analytics dashboard showing:
 
 **ViewModel:** `AnalysisHubViewModel` observes `GetLatestAnalysisUseCase`
 
-### 2. User Profile (`/profile`)
+**Stitch Source (latest loaded):** `Analysis Dashboard v2` (`98de1efc44014fbebe0efcfd1e5cc8be`)
+
+### 2. Dashboard (`/dashboard`)
+**File:** `presentation/dashboard/DashboardScreen.kt`
+
+Dashboard hub screen showing:
+- **Mastery Hero** - progress narrative with CTA to input latest mock result
+- **Current Average Card** - average score, target velocity, and delta vs previous mock
+- **Performance Trend** - recent mock trend bars
+- **Subject Proficiency** - compact per-subject progress stack
+- **Focus/Strength/Time Insight Cards** - actionable guidance blocks
+
+**ViewModel:** `DashboardViewModel` combines `GetAllAnalysesUseCase` + `GetUserProfileUseCase`
+
+**Stitch Source (latest loaded):** `Analysis Dashboard v3` (`fe861c5442234eccaa06ea4be596cb5b`)
+
+### 3. Manual Score Entry (`/input`)
+**File:** `presentation/input/ManualScoreEntryScreen.kt`
+
+Input screen for local mock entry showing:
+- **Platform Selector** - Testbook/Oliveboard/Adda247/Other
+- **Mock Type Selector** - Full Mock/Sectional/Module
+- **Subject Input Blocks** - marks and time fields per subject
+- **Total Score Preview** - live aggregation out of 200
+- **Generate Analysis CTA** - validates and saves locally
+
+**ViewModel:** `ManualScoreEntryViewModel` uses `SaveAnalysisUseCase`
+
+**Stitch Source (latest loaded):** `Manual Score Entry v2` (`ca92407cc84c4c05bd343e7238b79542`)
+
+### 4. User Profile (`/profile`)
 **File:** `presentation/profile/ProfileScreen.kt`
 
 Profile and settings screen showing:
@@ -122,6 +168,8 @@ Profile and settings screen showing:
 - **Logout Button**
 
 **ViewModel:** `ProfileViewModel` manages settings updates and logout
+
+**Stitch Source (latest loaded):** `User Profile` (`1ea4f37fd9eb4788b0784cc9113e9d34`)
 
 ---
 
@@ -187,6 +235,7 @@ data class UserProfile(
 | Async | Coroutines | 1.7.3 |
 | Images | Coil | 2.5.0 |
 | Fonts | Google Fonts Compose | 1.6.0 |
+| Storage | Room (SQLite) | 2.6.1 |
 
 ---
 
@@ -210,10 +259,10 @@ data class UserProfile(
 ## Next Steps / TODO
 
 ### High Priority
-1. [ ] Implement Dashboard screen with overview stats
-2. [ ] Implement Manual Score Entry screen (input form)
+1. [x] Implement Dashboard screen with overview stats
+2. [x] Implement Manual Score Entry screen (input form)
 3. [ ] Implement Mock Analysis History screen (list view)
-4. [ ] Add Room database for local persistence
+4. [x] Add Room database for local persistence
 5. [ ] Implement actual API integration (replace MockDataSource)
 
 ### Medium Priority
@@ -240,15 +289,18 @@ The designs were generated using the Stitch MCP server:
 
 | Screen | Screen ID |
 |--------|-----------|
-| Analysis Hub | `ebe6ffa997e54ce7b6ec6ec3ff31ed2e` |
+| Analysis Dashboard v3 | `fe861c5442234eccaa06ea4be596cb5b` |
+| Analysis Dashboard v2 | `98de1efc44014fbebe0efcfd1e5cc8be` |
 | User Profile | `1ea4f37fd9eb4788b0784cc9113e9d34` |
-| Dashboard | `dc0a3cba723f4940b7f6906caf4fa667` |
-| Mock Test List | `c9b600c3ed2d4f6bb229e863143448b6` |
-| Manual Score Entry | `ddcf74cc9ef647b9b1fbac230fd3996e` |
-| Mock Analysis History | `31e47b7b948745fbb7cf652dc4dd8893` |
-| Performance Analysis | `e11fb80835d644a48a318ec3f525340e` |
+| Analysis Hub | `ebe6ffa997e54ce7b6ec6ec3ff31ed2e` |
+| Manual Score Entry v2 | `ca92407cc84c4c05bd343e7238b79542` |
 | Weak Area Tracker | `a7d588b0243e4129911a3f500b3f61b4` |
-| Analysis Dashboard | `064bda00995845879a0389a6e89528a0` |
+| Mock Analysis History | `31e47b7b948745fbb7cf652dc4dd8893` |
+| Legacy Dashboard (hidden) | `dc0a3cba723f4940b7f6906caf4fa667` |
+| Legacy Mock Test List (hidden) | `c9b600c3ed2d4f6bb229e863143448b6` |
+| Legacy Manual Score Entry (hidden) | `ddcf74cc9ef647b9b1fbac230fd3996e` |
+| Legacy Performance Analysis (hidden) | `e11fb80835d644a48a318ec3f525340e` |
+| Legacy Analysis Dashboard (hidden) | `064bda00995845879a0389a6e89528a0` |
 
 To fetch updated designs:
 ```kotlin
