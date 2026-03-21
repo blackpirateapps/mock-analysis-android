@@ -120,7 +120,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             ),
                             CupertinoButton(
                               padding: EdgeInsets.zero,
-                              minSize: 20,
+                              minimumSize: const Size(20, 20),
                               onPressed: () => _deleteCategory(category.id),
                               child: const Icon(CupertinoIcons.delete_simple),
                             ),

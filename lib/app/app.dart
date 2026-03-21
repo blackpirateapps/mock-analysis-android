@@ -19,7 +19,7 @@ class MockAnalysisApp extends StatelessWidget {
         primaryColor: CupertinoColors.activeBlue,
       ),
       home: CupertinoTabScaffold(
-        tabBar: const CupertinoTabBar(
+        tabBar: CupertinoTabBar(
           items: [
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.doc_text),

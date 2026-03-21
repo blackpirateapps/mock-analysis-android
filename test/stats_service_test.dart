@@ -4,17 +4,17 @@ import 'package:mock_analysis_android/domain/services/stats_service.dart';
 
 void main() {
   group('StatsService', () {
-    const english = Category(
+    final english = Category(
       id: 1,
       name: 'English mock',
       createdAt: DateTime(2025, 1, 1),
     );
-    const reasoning = Category(
+    final reasoning = Category(
       id: 2,
       name: 'Reasoning mock',
       createdAt: DateTime(2025, 1, 2),
     );
-    const maths = Category(
+    final maths = Category(
       id: 3,
       name: 'Maths mock',
       createdAt: DateTime(2025, 1, 3),
@@ -28,7 +28,7 @@ void main() {
         rightAnswers: 70,
         wrongAnswers: 20,
         createdAt: DateTime(2025, 1, 10),
-        categories: const [english, reasoning],
+        categories: [english, reasoning],
       ),
       MockEntry(
         id: 2,
@@ -37,7 +37,7 @@ void main() {
         rightAnswers: 30,
         wrongAnswers: 15,
         createdAt: DateTime(2025, 1, 11),
-        categories: const [maths],
+        categories: [maths],
       ),
     ];
 
@@ -55,7 +55,7 @@ void main() {
 
     test('computes category wise stats for many-to-many entries', () {
       const service = StatsService();
-      final byCategory = service.computeByCategory(const [
+      final byCategory = service.computeByCategory([
         english,
         reasoning,
         maths,

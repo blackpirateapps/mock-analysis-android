@@ -129,7 +129,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                       const SizedBox(width: 8),
                       CupertinoButton(
                         padding: EdgeInsets.zero,
-                        minSize: 20,
+                        minimumSize: const Size(20, 20),
                         onPressed: () => _deleteEntry(entry.id),
                         child: const Icon(CupertinoIcons.delete_simple),
                       ),
