@@ -81,46 +81,36 @@ private fun AnalysisHubContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 20.dp)
             .padding(bottom = 100.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         
         // Hero Section
         HeroSection(analysis)
         
-        // Score and Benchmarking Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ScoreCard(
-                analysis = analysis,
-                scoreImprovement = scoreImprovement,
-                modifier = Modifier.weight(5f)
-            )
-            BenchmarkingCard(
-                benchmarks = analysis.benchmarks,
-                modifier = Modifier.weight(7f)
-            )
-        }
+        ScoreCard(
+            analysis = analysis,
+            scoreImprovement = scoreImprovement,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        BenchmarkingCard(
+            benchmarks = analysis.benchmarks,
+            modifier = Modifier.fillMaxWidth()
+        )
         
-        // Proficiency and Milestone Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProficiencySection(
-                subjectScores = analysis.subjectScores,
-                modifier = Modifier.weight(8f)
-            )
-            MilestoneCard(
-                focusAreas = analysis.focusAreas,
-                onStartPractice = onStartPractice,
-                modifier = Modifier.weight(4f)
-            )
-        }
+        ProficiencySection(
+            subjectScores = analysis.subjectScores,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        MilestoneCard(
+            focusAreas = analysis.focusAreas,
+            onStartPractice = onStartPractice,
+            modifier = Modifier.fillMaxWidth()
+        )
         
         // Time vs Accuracy Section
         TimeAccuracySection(questionMetrics = analysis.questionMetrics)
@@ -197,7 +187,7 @@ private fun ScoreCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = analysis.score.toString(),
+                        text = formatScore(analysis.score),
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 48.sp,
@@ -228,7 +218,7 @@ private fun ScoreCard(
                     letterSpacing = 0.5.sp
                 )
                 Text(
-                    text = "${analysis.percentile}%",
+                    text = "${formatScore(analysis.percentile)}%",
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Black,
                     fontSize = 20.sp,
@@ -257,7 +247,7 @@ private fun ScoreCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "+${scoreImprovement?.toString() ?: "0"} from last mock",
+                    text = "${formatSignedScore(scoreImprovement ?: 0f)} from last mock",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MockAnalysisColors.Secondary
@@ -329,17 +319,18 @@ private fun ProficiencySection(
     ElevatedStatCard(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Top
         ) {
             Text(
                 text = "Subject-wise Proficiency",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
             )
             
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 subjectScores.forEach { score ->
                     MetadataTag(text = score.shortName)
                 }
@@ -351,7 +342,7 @@ private fun ProficiencySection(
         // Subject scores grid
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             subjectScores.forEach { score ->
                 SubjectProficiencyCard(
@@ -576,6 +567,15 @@ private fun TimeAccuracySection(questionMetrics: List<QuestionMetric>) {
             )
         }
     }
+}
+
+private fun formatScore(value: Float): String {
+    return if (value % 1f == 0f) value.toInt().toString() else String.format("%.1f", value)
+}
+
+private fun formatSignedScore(value: Float): String {
+    val prefix = if (value >= 0f) "+" else ""
+    return prefix + formatScore(value)
 }
 
 @Composable

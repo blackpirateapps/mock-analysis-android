@@ -22,6 +22,11 @@ interface AnalysisRepository {
      * Get all analyses for the current user.
      */
     fun getAllAnalyses(): Flow<List<MockAnalysis>>
+
+    /**
+     * Save a mock test analysis entry locally.
+     */
+    suspend fun saveAnalysis(analysis: MockAnalysis)
     
     /**
      * Refresh analysis data from remote source.

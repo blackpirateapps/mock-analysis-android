@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -45,6 +46,7 @@ fun MockAnalysisTopBar(
         ) {
             // Left side: Avatar + App Name
             Row(
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -78,7 +80,9 @@ fun MockAnalysisTopBar(
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp,
-                    color = MockAnalysisColors.Primary
+                    color = MockAnalysisColors.Primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             

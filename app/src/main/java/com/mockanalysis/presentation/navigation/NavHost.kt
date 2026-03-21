@@ -5,19 +5,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mockanalysis.presentation.analysis.AnalysisHubScreen
 import com.mockanalysis.presentation.common.components.BottomNavItem
 import com.mockanalysis.presentation.common.components.MockAnalysisBottomBar
 import com.mockanalysis.presentation.common.components.MockAnalysisTopBar
+import com.mockanalysis.presentation.dashboard.DashboardScreen
+import com.mockanalysis.presentation.input.ManualScoreEntryScreen
 import com.mockanalysis.presentation.profile.ProfileScreen
 
 /**
@@ -38,7 +37,8 @@ object NavRoutes {
 fun MockAnalysisNavHost(
     navController: NavHostController = rememberNavController()
 ) {
-    var currentRoute by remember { mutableStateOf(NavRoutes.ANALYSIS) }
+    val navBackStackEntry = navController.currentBackStackEntryAsState().value
+    val currentRoute = navBackStackEntry?.destination?.route ?: NavRoutes.DASHBOARD
     
     // Sample avatar URL (would come from user profile in real app)
     val avatarUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDoR95ZIhK435esYJt7VnhTu9fOKoYA5cjsiguq6VrY6fGAbOvmHa4yizzNV1K9_MXAK78nUSWCVMASpjV-T9NrvsZnLEprSCow8TMUkNLfBTvfHJHwnXiG-22uNlpJ-94CIhwjjRhOtvdrKV78OhPb3_3gPTavzacJ6ZoO0YeB6g46zZyGcocs-sVsZI73atTVDxvSdwaeX25RzdRx0Ii2gtYf4CRsBd0mz2MtkE4VGcSXmHqbdQIQ6Ya4VQaAc79Vvl52WwB-kpk"
@@ -54,7 +54,6 @@ fun MockAnalysisNavHost(
             MockAnalysisBottomBar(
                 currentRoute = currentRoute,
                 onNavigate = { item ->
-                    currentRoute = item.route
                     navController.navigate(item.route) {
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
@@ -73,16 +72,18 @@ fun MockAnalysisNavHost(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = NavRoutes.ANALYSIS
+                startDestination = NavRoutes.DASHBOARD
             ) {
                 composable(NavRoutes.DASHBOARD) {
-                    // Placeholder for Dashboard screen
-                    PlaceholderScreen(title = "Dashboard")
+                    DashboardScreen(
+                        onNavigateToInput = {
+                            navController.navigate(NavRoutes.INPUT)
+                        }
+                    )
                 }
                 
                 composable(NavRoutes.INPUT) {
-                    // Placeholder for Input screen
-                    PlaceholderScreen(title = "Manual Score Entry")
+                    ManualScoreEntryScreen()
                 }
                 
                 composable(NavRoutes.HISTORY) {

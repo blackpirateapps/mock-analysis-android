@@ -38,4 +38,9 @@ interface UserRepository {
      * Refresh user profile from remote source.
      */
     suspend fun refreshProfile()
+
+    /**
+     * Persist full profile details locally.
+     */
+    suspend fun saveUserProfile(profile: UserProfile)
 }

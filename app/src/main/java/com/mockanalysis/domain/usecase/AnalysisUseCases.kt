@@ -31,3 +31,12 @@ class RefreshAnalysisUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.refreshAnalysis()
 }
+
+/**
+ * Use case for saving a mock analysis entry.
+ */
+class SaveAnalysisUseCase @Inject constructor(
+    private val repository: AnalysisRepository
+) {
+    suspend operator fun invoke(analysis: MockAnalysis) = repository.saveAnalysis(analysis)
+}
