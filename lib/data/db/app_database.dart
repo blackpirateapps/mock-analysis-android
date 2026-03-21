@@ -1,65 +1,67 @@
-import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
 
-part 'app_database.g.dart';
+class AppDatabase {
+  AppDatabase._();
 
-class Tests extends Table {
-  TextColumn get id => text()();
-  TextColumn get timestamp => text()();
-  TextColumn get testName => text()();
-  RealColumn get percentile => real()();
-  IntColumn get rank => integer()();
-  IntColumn get totalCandidates => integer()();
+  static final AppDatabase instance = AppDatabase._();
+  static const _dbName = 'mock_analysis.db';
 
-  @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
-}
+  Database? _database;
 
-class Subjects extends Table {
-  TextColumn get subjectId => text()();
-  TextColumn get testId =>
-      text().references(Tests, #id, onDelete: KeyAction.cascade)();
-  TextColumn get name => text()();
-  IntColumn get attempted => integer()();
-  IntColumn get wrong => integer()();
-  IntColumn get skipped => integer()();
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _open();
+    return _database!;
+  }
 
-  @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{subjectId};
-}
+  Future<Database> _open() async {
+    final dbPath = await getDatabasesPath();
+    final path = p.join(dbPath, _dbName);
 
-class AppSettings extends Table {
-  TextColumn get key => text()();
-  TextColumn get value => text()();
+    return openDatabase(
+      path,
+      version: 1,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON;');
+      },
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL
+          );
+        ''');
 
-  @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{key};
-}
+        await db.execute('''
+          CREATE TABLE mock_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mock_name TEXT NOT NULL,
+            total_questions INTEGER NOT NULL,
+            right_answers INTEGER NOT NULL,
+            wrong_answers INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+          );
+        ''');
 
-@DriftDatabase(tables: <Type>[Tests, Subjects, AppSettings])
-class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+        await db.execute('''
+          CREATE TABLE entry_categories (
+            entry_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            PRIMARY KEY (entry_id, category_id),
+            FOREIGN KEY (entry_id) REFERENCES mock_entries(id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+          );
+        ''');
 
-  @override
-  int get schemaVersion => 1;
-
-  Future<void> upsertSetting(String key, String value) async {
-    await into(appSettings).insertOnConflictUpdate(
-      AppSettingsCompanion.insert(key: key, value: value),
+        await db.execute(
+          'CREATE INDEX idx_entry_categories_entry ON entry_categories(entry_id);',
+        );
+        await db.execute(
+          'CREATE INDEX idx_entry_categories_category ON entry_categories(category_id);',
+        );
+      },
     );
   }
-
-  Future<String?> getSetting(String key) async {
-    final AppSetting? row = await (select(
-      appSettings,
-    )..where((AppSettings tbl) => tbl.key.equals(key))).getSingleOrNull();
-    return row?.value;
-  }
-}
-
-QueryExecutor _openConnection() {
-  return driftDatabase(
-    name: 'mock_analysis.sqlite',
-    native: const DriftNativeOptions(),
-  );
 }

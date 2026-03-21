@@ -1,20 +1,37 @@
 # Mock Analysis Android
 
-Local-first competitive exam mock analysis app built with Flutter + Drift.
+Cupertino-style Flutter app to log and analyze mock test performance locally.
 
 ## Features
-- Offline-only mock test logging
-- Dynamic subject entry with automatic calculations
-- 3-tier insights (overall, subject breakdown, trend/weakness)
-- JSON backup export/import
-- Global marking scheme controls
 
-## Build APK via GitHub Actions
-This machine may not be able to build APK locally. Use workflow:
+- Add mock entries with:
+  - mock name
+  - total questions
+  - right answers
+  - wrong answers
+  - multiple categories per entry
+- Create and manage custom categories (English, Reasoning, Maths, etc.)
+- View statistics:
+  - overall stats
+  - category-wise stats
+- Fully local data storage (SQLite)
 
-1. Push branch to GitHub.
-2. Open **Actions** tab.
-3. Run **Android APK (Universal)** workflow.
-4. Download artifact: `mock-analysis-universal-apk-<sha>`.
+## Local run
 
-The workflow generates `app-release.apk` as a universal APK.
+1. Install Flutter SDK.
+2. Run:
+
+```bash
+flutter pub get
+flutter run
+```
+
+## CI build (recommended for weak laptops)
+
+GitHub Actions workflow is available at `.github/workflows/android-apk.yml` and performs:
+
+- `flutter analyze`
+- `flutter test`
+- `flutter build apk --release`
+
+The built APK is uploaded as a workflow artifact.

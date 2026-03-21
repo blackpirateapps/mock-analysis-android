@@ -1,69 +1,57 @@
 import 'package:flutter/cupertino.dart';
 
-import '../features/home/home_screen.dart';
-import '../features/insights/insights_screen.dart';
-import '../features/log/log_screen.dart';
-import '../features/settings/settings_screen.dart';
+import '../features/categories/categories_screen.dart';
+import '../features/entries/entries_screen.dart';
+import '../features/statistics/statistics_screen.dart';
+import 'app_state.dart';
 
 class MockAnalysisApp extends StatelessWidget {
-  const MockAnalysisApp({super.key});
+  const MockAnalysisApp({super.key, required this.state});
+
+  final AppState state;
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
+    return CupertinoApp(
       debugShowCheckedModeBanner: false,
-      theme: CupertinoThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Color(0xFF000000),
-        primaryColor: Color(0xFF0A84FF),
-        barBackgroundColor: Color(0xFF000000),
+      theme: const CupertinoThemeData(
+        brightness: Brightness.light,
+        primaryColor: CupertinoColors.activeBlue,
       ),
-      home: RootTabScaffold(),
-    );
-  }
-}
-
-class RootTabScaffold extends StatelessWidget {
-  const RootTabScaffold({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        backgroundColor: const Color(0xFF000000),
-        activeColor: const Color(0xFFFFFFFF),
-        inactiveColor: const Color(0xFF8E8E93),
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.add_circled),
-            label: 'Log',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.chart_bar_alt_fill),
-            label: 'Insights',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.settings),
-            label: 'Settings',
-          ),
-        ],
+      home: CupertinoTabScaffold(
+        tabBar: const CupertinoTabBar(
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.doc_text),
+              label: 'Entries',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.folder),
+              label: 'Categories',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.chart_bar),
+              label: 'Statistics',
+            ),
+          ],
+        ),
+        tabBuilder: (context, index) {
+          return CupertinoTabView(
+            builder: (context) {
+              switch (index) {
+                case 0:
+                  return EntriesScreen(state: state);
+                case 1:
+                  return CategoriesScreen(state: state);
+                case 2:
+                  return StatisticsScreen(state: state);
+                default:
+                  return EntriesScreen(state: state);
+              }
+            },
+          );
+        },
       ),
-      tabBuilder: (BuildContext context, int index) {
-        switch (index) {
-          case 0:
-            return const HomeScreen();
-          case 1:
-            return const LogScreen();
-          case 2:
-            return const InsightsScreen();
-          default:
-            return const SettingsScreen();
-        }
-      },
     );
   }
 }

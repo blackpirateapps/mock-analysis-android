@@ -1,95 +1,73 @@
-class SubjectEntry {
-  const SubjectEntry({
-    required this.subjectId,
-    required this.name,
-    required this.attempted,
-    required this.wrong,
-    required this.skipped,
-  });
-
-  final String subjectId;
-  final String name;
-  final int attempted;
-  final int wrong;
-  final int skipped;
-
-  int get correct => attempted - wrong;
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'subjectId': subjectId,
-      'name': name,
-      'attempted': attempted,
-      'wrong': wrong,
-      'skipped': skipped,
-    };
-  }
-
-  factory SubjectEntry.fromJson(Map<String, dynamic> json) {
-    return SubjectEntry(
-      subjectId: json['subjectId'] as String,
-      name: json['name'] as String,
-      attempted: (json['attempted'] as num).toInt(),
-      wrong: (json['wrong'] as num).toInt(),
-      skipped: (json['skipped'] as num).toInt(),
-    );
-  }
-}
-
-class TestEntry {
-  const TestEntry({
+class Category {
+  const Category({
     required this.id,
-    required this.timestamp,
-    required this.testName,
-    required this.percentile,
-    required this.rank,
-    required this.totalCandidates,
-    required this.subjects,
+    required this.name,
+    required this.createdAt,
   });
 
-  final String id;
-  final DateTime timestamp;
-  final String testName;
-  final double percentile;
-  final int rank;
-  final int totalCandidates;
-  final List<SubjectEntry> subjects;
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'id': id,
-      'timestamp': timestamp.toUtc().toIso8601String(),
-      'testName': testName,
-      'percentile': percentile,
-      'rank': rank,
-      'totalCandidates': totalCandidates,
-      'subjects': subjects.map((subject) => subject.toJson()).toList(),
-    };
-  }
-
-  factory TestEntry.fromJson(Map<String, dynamic> json) {
-    final List<dynamic> subjectList =
-        (json['subjects'] as List<dynamic>? ?? <dynamic>[]);
-    return TestEntry(
-      id: json['id'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      testName: json['testName'] as String,
-      percentile: (json['percentile'] as num).toDouble(),
-      rank: (json['rank'] as num).toInt(),
-      totalCandidates: (json['totalCandidates'] as num).toInt(),
-      subjects: subjectList
-          .map(
-            (dynamic item) =>
-                SubjectEntry.fromJson(item as Map<String, dynamic>),
-          )
-          .toList(),
-    );
-  }
+  final int id;
+  final String name;
+  final DateTime createdAt;
 }
 
-class MarkingScheme {
-  const MarkingScheme({required this.correctMark, required this.wrongPenalty});
+class MockEntry {
+  const MockEntry({
+    required this.id,
+    required this.mockName,
+    required this.totalQuestions,
+    required this.rightAnswers,
+    required this.wrongAnswers,
+    required this.createdAt,
+    required this.categories,
+  });
 
-  final double correctMark;
-  final double wrongPenalty;
+  final int id;
+  final String mockName;
+  final int totalQuestions;
+  final int rightAnswers;
+  final int wrongAnswers;
+  final DateTime createdAt;
+  final List<Category> categories;
+
+  int get unanswered => totalQuestions - rightAnswers - wrongAnswers;
+  double get accuracy =>
+      totalQuestions == 0 ? 0 : (rightAnswers / totalQuestions) * 100;
+}
+
+class OverallStats {
+  const OverallStats({
+    required this.mockCount,
+    required this.totalQuestions,
+    required this.totalRight,
+    required this.totalWrong,
+  });
+
+  final int mockCount;
+  final int totalQuestions;
+  final int totalRight;
+  final int totalWrong;
+
+  int get unanswered => totalQuestions - totalRight - totalWrong;
+  double get accuracy =>
+      totalQuestions == 0 ? 0 : (totalRight / totalQuestions) * 100;
+}
+
+class CategoryStats {
+  const CategoryStats({
+    required this.category,
+    required this.mockCount,
+    required this.totalQuestions,
+    required this.totalRight,
+    required this.totalWrong,
+  });
+
+  final Category category;
+  final int mockCount;
+  final int totalQuestions;
+  final int totalRight;
+  final int totalWrong;
+
+  int get unanswered => totalQuestions - totalRight - totalWrong;
+  double get accuracy =>
+      totalQuestions == 0 ? 0 : (totalRight / totalQuestions) * 100;
 }

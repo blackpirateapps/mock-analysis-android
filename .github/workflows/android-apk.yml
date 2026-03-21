@@ -1,4 +1,4 @@
-name: Android APK (Universal)
+name: Android APK (Cupertino Mock Analysis)
 
 on:
   workflow_dispatch:
@@ -28,13 +28,13 @@ jobs:
           cache: true
 
       - name: Generate Android project files
-        run: flutter create --platforms=android --project-name mock_analysis_android .
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --project-name mock_analysis_android .
+          fi
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Generate Drift code
-        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
         run: flutter analyze
