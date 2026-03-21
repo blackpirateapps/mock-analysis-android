@@ -17,8 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,11 +66,14 @@ fun ManualScoreEntryScreen(
             Spacer(modifier = Modifier.height(10.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Testbook", "Oliveboard", "Adda247", "Other").forEach { platform ->
-                    FilterChip(
-                        selected = uiState.platform == platform,
+                    val selected = uiState.platform == platform
+                    OutlinedButton(
                         onClick = { viewModel.updatePlatform(platform) },
-                        label = { Text(platform) }
-                    )
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (selected) MockAnalysisColors.PrimaryFixed else MockAnalysisColors.SurfaceContainerHigh,
+                            contentColor = if (selected) MockAnalysisColors.OnPrimaryFixed else MockAnalysisColors.OnSurface
+                        )
+                    ) { Text(platform) }
                 }
             }
         }
@@ -80,11 +83,14 @@ fun ManualScoreEntryScreen(
             Spacer(modifier = Modifier.height(10.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Full Mock", "Sectional", "Module").forEach { type ->
-                    FilterChip(
-                        selected = uiState.mockType == type,
+                    val selected = uiState.mockType == type
+                    OutlinedButton(
                         onClick = { viewModel.updateMockType(type) },
-                        label = { Text(type) }
-                    )
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (selected) MockAnalysisColors.SecondaryFixed else MockAnalysisColors.SurfaceContainerHigh,
+                            contentColor = if (selected) MockAnalysisColors.OnSecondaryFixed else MockAnalysisColors.OnSurface
+                        )
+                    ) { Text(type) }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
