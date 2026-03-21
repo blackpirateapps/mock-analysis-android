@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.mockanalysis.data.local.entity.AchievementEntity
 import com.mockanalysis.data.local.entity.LinkedPlatformEntity
 import com.mockanalysis.data.local.entity.UserProfileEntity
@@ -14,6 +15,12 @@ interface UserDao {
 
     @Query("SELECT * FROM user_profile LIMIT 1")
     fun observeUserProfile(): Flow<UserProfileEntity?>
+
+    @Query("SELECT * FROM achievement")
+    fun observeAchievements(): Flow<List<AchievementEntity>>
+
+    @Query("SELECT * FROM linked_platform")
+    fun observeLinkedPlatforms(): Flow<List<LinkedPlatformEntity>>
 
     @Query("SELECT * FROM user_profile LIMIT 1")
     suspend fun getUserProfile(): UserProfileEntity?
@@ -44,4 +51,18 @@ interface UserDao {
 
     @Query("SELECT COUNT(*) FROM user_profile")
     suspend fun getProfileCount(): Int
+
+    @Transaction
+    suspend fun replaceProfileBundle(
+        profile: UserProfileEntity,
+        achievements: List<AchievementEntity>,
+        platforms: List<LinkedPlatformEntity>
+    ) {
+        clearUserProfile()
+        insertUserProfile(profile)
+        clearAchievements()
+        insertAchievements(achievements)
+        clearLinkedPlatforms()
+        insertLinkedPlatforms(platforms)
+    }
 }

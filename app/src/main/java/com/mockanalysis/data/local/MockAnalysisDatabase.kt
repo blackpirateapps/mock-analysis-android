@@ -2,8 +2,6 @@ package com.mockanalysis.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
-import androidx.room.TypeConverters
 import com.mockanalysis.data.local.dao.AnalysisDao
 import com.mockanalysis.data.local.dao.UserDao
 import com.mockanalysis.data.local.entity.AchievementEntity
@@ -20,19 +18,10 @@ import com.mockanalysis.data.local.entity.UserProfileEntity
         AchievementEntity::class,
         LinkedPlatformEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(BooleanConverters::class)
 abstract class MockAnalysisDatabase : RoomDatabase() {
     abstract fun analysisDao(): AnalysisDao
     abstract fun userDao(): UserDao
-}
-
-object BooleanConverters {
-    @TypeConverter
-    fun fromBoolean(value: Boolean): Int = if (value) 1 else 0
-
-    @TypeConverter
-    fun toBoolean(value: Int): Boolean = value == 1
 }

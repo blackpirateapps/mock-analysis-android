@@ -1,6 +1,7 @@
 package com.mockanalysis.data.repository
 
 import com.mockanalysis.data.local.dao.AnalysisDao
+import com.mockanalysis.data.local.entity.AttemptWithSubjects
 import com.mockanalysis.data.local.entity.MockAttemptEntity
 import com.mockanalysis.data.local.entity.SubjectScoreEntity
 import com.mockanalysis.data.source.MockDataSource
@@ -13,7 +14,7 @@ import com.mockanalysis.domain.model.SubjectScore
 import com.mockanalysis.domain.repository.AnalysisRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.time.LocalDate
@@ -27,30 +28,22 @@ class AnalysisRepositoryImpl @Inject constructor(
     private val mockDataSource: MockDataSource
 ) : AnalysisRepository {
 
-    init {
-        // Seed starter data on first app launch.
-        kotlinx.coroutines.runBlocking {
-            if (analysisDao.getAttemptCount() == 0) {
-                saveAnalysis(mockDataSource.getMockAnalysis())
-            }
-        }
-    }
-
     override fun getLatestAnalysis(): Flow<MockAnalysis?> {
-        return analysisDao.observeLatestAttempt().map { attempt ->
-            attempt?.let { runBlocking { mapAttemptToDomain(it) } }
-        }
+        return analysisDao.observeLatestAttemptWithSubjects()
+            .onStart { seedIfEmpty() }
+            .map { attempt -> attempt?.let { mapAttemptToDomain(it) } }
     }
 
     override suspend fun getAnalysisById(mockId: String): MockAnalysis? {
-        val attempt = analysisDao.getAttemptById(mockId) ?: return null
+        seedIfEmpty()
+        val attempt = analysisDao.getAttemptWithSubjectsById(mockId) ?: return null
         return mapAttemptToDomain(attempt)
     }
 
     override fun getAllAnalyses(): Flow<List<MockAnalysis>> {
-        return analysisDao.observeAllAttempts().map { attempts ->
-            attempts.map { runBlocking { mapAttemptToDomain(it) } }
-        }
+        return analysisDao.observeAllAttemptsWithSubjects()
+            .onStart { seedIfEmpty() }
+            .map { attempts -> attempts.map { mapAttemptToDomain(it) } }
     }
 
     override suspend fun saveAnalysis(analysis: MockAnalysis) {
@@ -84,17 +77,16 @@ class AnalysisRepositoryImpl @Inject constructor(
             )
         }
 
-        analysisDao.insertAttempt(attempt)
-        analysisDao.deleteSubjectScoresForAttempt(analysis.id)
-        analysisDao.insertSubjectScores(subjectScores)
+        analysisDao.insertAttemptWithSubjects(attempt, subjectScores)
     }
 
     override suspend fun refreshAnalysis() {
         // Local-first app, no remote refresh.
     }
 
-    private suspend fun mapAttemptToDomain(attempt: MockAttemptEntity): MockAnalysis {
-        val subjectScores = analysisDao.getSubjectScoresForAttempt(attempt.id).map { subject ->
+    private fun mapAttemptToDomain(bundle: AttemptWithSubjects): MockAnalysis {
+        val attempt = bundle.attempt
+        val subjectScores = bundle.subjects.map { subject ->
             SubjectScore(
                 subjectId = subject.subjectId,
                 subjectName = subject.subjectName,
@@ -152,4 +144,10 @@ class AnalysisRepositoryImpl @Inject constructor(
     }
 
     private fun defaultQuestionMetrics(): List<QuestionMetric> = emptyList()
+
+    private suspend fun seedIfEmpty() {
+        if (analysisDao.getAttemptCount() == 0) {
+            saveAnalysis(mockDataSource.getMockAnalysis())
+        }
+    }
 }

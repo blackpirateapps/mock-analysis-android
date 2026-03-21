@@ -13,8 +13,8 @@ import com.mockanalysis.domain.model.UserProfile
 import com.mockanalysis.domain.model.UserTier
 import com.mockanalysis.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,18 +27,21 @@ class UserRepositoryImpl @Inject constructor(
     private val mockDataSource: MockDataSource
 ) : UserRepository {
 
-    init {
-        // Seed starter profile on first launch.
-        kotlinx.coroutines.runBlocking {
-            if (userDao.getProfileCount() == 0) {
-                saveUserProfile(mockDataSource.getUserProfile())
-            }
-        }
-    }
-
     override fun getUserProfile(): Flow<UserProfile?> {
-        return userDao.observeUserProfile().map { profileEntity ->
-            profileEntity?.let { runBlocking { mapEntityToDomain(it) } }
+        return combine(
+            userDao.observeUserProfile(),
+            userDao.observeAchievements(),
+            userDao.observeLinkedPlatforms()
+        ) { profileEntity, achievements, platforms ->
+            profileEntity?.let {
+                mapEntityToDomain(
+                    entity = it,
+                    achievementEntities = achievements,
+                    platformEntities = platforms
+                )
+            }
+        }.onStart {
+            seedIfEmpty()
         }
     }
 
@@ -86,9 +89,12 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
-        userDao.clearUserProfile()
-        userDao.clearAchievements()
-        userDao.clearLinkedPlatforms()
+        val defaultProfile = mockDataSource.getUserProfile()
+        userDao.replaceProfileBundle(
+            profile = defaultProfile.toEntity(),
+            achievements = defaultProfile.achievements.map { it.toEntity() },
+            platforms = defaultProfile.linkedPlatforms.map { it.toEntity() }
+        )
     }
 
     override suspend fun refreshProfile() {
@@ -96,59 +102,19 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveUserProfile(profile: UserProfile) {
-        userDao.insertUserProfile(
-            UserProfileEntity(
-                id = profile.id,
-                name = profile.name,
-                email = profile.email,
-                avatarUrl = profile.avatarUrl,
-                targetExamId = profile.targetExam.id,
-                targetExamName = profile.targetExam.name,
-                targetExamYear = profile.targetExam.year,
-                targetExamShortName = profile.targetExam.shortName,
-                tier = profile.tier.name,
-                targetScore = profile.targetScore,
-                currentProgressPercentage = profile.currentProgressPercentage,
-                timeWeightedAnalysis = profile.settings.timeWeightedAnalysis,
-                accuracyFocusMode = profile.settings.accuracyFocusMode,
-                predictiveGoalTracking = profile.settings.predictiveGoalTracking,
-                notificationsEnabled = profile.settings.notificationsEnabled,
-                darkModeEnabled = profile.settings.darkModeEnabled
-            )
-        )
-
-        userDao.clearAchievements()
-        userDao.insertAchievements(
-            profile.achievements.map { achievement ->
-                AchievementEntity(
-                    id = achievement.id,
-                    name = achievement.name,
-                    description = achievement.description,
-                    iconName = achievement.iconName,
-                    isUnlocked = achievement.isUnlocked,
-                    unlockedAt = achievement.unlockedAt,
-                    progress = achievement.progress
-                )
-            }
-        )
-
-        userDao.clearLinkedPlatforms()
-        userDao.insertLinkedPlatforms(
-            profile.linkedPlatforms.map { platform ->
-                LinkedPlatformEntity(
-                    id = platform.id,
-                    name = platform.name,
-                    shortCode = platform.shortCode,
-                    isConnected = platform.isConnected,
-                    username = platform.username,
-                    connectedAt = platform.connectedAt
-                )
-            }
+        userDao.replaceProfileBundle(
+            profile = profile.toEntity(),
+            achievements = profile.achievements.map { it.toEntity() },
+            platforms = profile.linkedPlatforms.map { it.toEntity() }
         )
     }
 
-    private suspend fun mapEntityToDomain(entity: UserProfileEntity): UserProfile {
-        val achievements = userDao.getAchievements().map { achievement ->
+    private fun mapEntityToDomain(
+        entity: UserProfileEntity,
+        achievementEntities: List<AchievementEntity>,
+        platformEntities: List<LinkedPlatformEntity>
+    ): UserProfile {
+        val achievements = achievementEntities.map { achievement ->
             Achievement(
                 id = achievement.id,
                 name = achievement.name,
@@ -159,7 +125,7 @@ class UserRepositoryImpl @Inject constructor(
                 progress = achievement.progress
             )
         }
-        val linkedPlatforms = userDao.getLinkedPlatforms().map { platform ->
+        val linkedPlatforms = platformEntities.map { platform ->
             LinkedPlatform(
                 id = platform.id,
                 name = platform.name,
@@ -193,6 +159,56 @@ class UserRepositoryImpl @Inject constructor(
                 notificationsEnabled = entity.notificationsEnabled,
                 darkModeEnabled = entity.darkModeEnabled
             )
+        )
+    }
+
+    private suspend fun seedIfEmpty() {
+        if (userDao.getProfileCount() == 0) {
+            saveUserProfile(mockDataSource.getUserProfile())
+        }
+    }
+
+    private fun UserProfile.toEntity(): UserProfileEntity {
+        return UserProfileEntity(
+            id = id,
+            name = name,
+            email = email,
+            avatarUrl = avatarUrl,
+            targetExamId = targetExam.id,
+            targetExamName = targetExam.name,
+            targetExamYear = targetExam.year,
+            targetExamShortName = targetExam.shortName,
+            tier = tier.name,
+            targetScore = targetScore,
+            currentProgressPercentage = currentProgressPercentage,
+            timeWeightedAnalysis = settings.timeWeightedAnalysis,
+            accuracyFocusMode = settings.accuracyFocusMode,
+            predictiveGoalTracking = settings.predictiveGoalTracking,
+            notificationsEnabled = settings.notificationsEnabled,
+            darkModeEnabled = settings.darkModeEnabled
+        )
+    }
+
+    private fun Achievement.toEntity(): AchievementEntity {
+        return AchievementEntity(
+            id = id,
+            name = name,
+            description = description,
+            iconName = iconName,
+            isUnlocked = isUnlocked,
+            unlockedAt = unlockedAt,
+            progress = progress
+        )
+    }
+
+    private fun LinkedPlatform.toEntity(): LinkedPlatformEntity {
+        return LinkedPlatformEntity(
+            id = id,
+            name = name,
+            shortCode = shortCode,
+            isConnected = isConnected,
+            username = username,
+            connectedAt = connectedAt
         )
     }
 }

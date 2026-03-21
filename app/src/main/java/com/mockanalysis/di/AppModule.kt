@@ -58,7 +58,9 @@ object AppModule {
             context,
             MockAnalysisDatabase::class.java,
             "mock_analysis.db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
