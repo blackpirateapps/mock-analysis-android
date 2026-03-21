@@ -238,7 +238,7 @@ private fun ScoreCard(
         }
         
         Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider(color = MockAnalysisColors.SurfaceContainerLow)
+        Divider(color = MockAnalysisColors.SurfaceContainerLow)
         Spacer(modifier = Modifier.height(16.dp))
         
         Row(
@@ -506,7 +506,7 @@ private fun TimeAccuracySection(questionMetrics: List<QuestionMetric>) {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 repeat(5) {
-                    HorizontalDivider(
+                    Divider(
                         color = MockAnalysisColors.OnSurfaceVariant.copy(alpha = 0.1f)
                     )
                 }

@@ -109,14 +109,7 @@ val LightColorScheme = androidx.compose.material3.lightColorScheme(
     inversePrimary = MockAnalysisColors.InversePrimary,
     outline = MockAnalysisColors.Outline,
     outlineVariant = MockAnalysisColors.OutlineVariant,
-    scrim = MockAnalysisColors.Scrim,
-    surfaceBright = MockAnalysisColors.SurfaceBright,
-    surfaceDim = MockAnalysisColors.SurfaceDim,
-    surfaceContainer = MockAnalysisColors.SurfaceContainer,
-    surfaceContainerHigh = MockAnalysisColors.SurfaceContainerHigh,
-    surfaceContainerHighest = MockAnalysisColors.SurfaceContainerHighest,
-    surfaceContainerLow = MockAnalysisColors.SurfaceContainerLow,
-    surfaceContainerLowest = MockAnalysisColors.SurfaceContainerLowest
+    scrim = MockAnalysisColors.Scrim
 )
 
 // Extended color properties for design system specific colors
